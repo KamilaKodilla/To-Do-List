@@ -17,9 +17,11 @@
     "url": "https://github.com/KamilaKodilla/To-Do-List/issues"
   },
   "homepage": "https://github.com/KamilaKodilla/To-Do-List#readme",
-  
   "dependencies": {
     "express": "^4.17.1",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^4.2.0",
+    "uuid": "^8.3.2"
   }
 }

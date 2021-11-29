@@ -1,8 +1,47 @@
 import React from 'react';
+import io from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
 
 class App extends React.Component {
+  state = {
+    tasks: [],
+    taskName: '',
+  }
+  
+  componentDidMount() {
+    this.socket = io.connect('http://localhost:8000', {
+      transports: ['websocket'],
+    });
+
+    this.socket.on('addTask', task => this.addTask(task));
+    this.socket.on('removeTask', id => this.removeTask(id));
+    this.socket.on('updateData', tasks => this.updateTasks(tasks));
+  }
+
+  submitForm = (event) => {
+    event.preventDefault();
+    const newTask = { id: uuidv4(), name: this.state.taskName };
+    this.addTask(newTask);
+    this.socket.emit('addTask', newTask);
+    this.setState({ taskName: '' });
+  }
+
+  addTask = task => {
+    this.setState({tasks: [...this.state.tasks, task]});
+  }
+
+  removeTask = (id, local) => {
+    this.setState({ tasks: this.state.tasks.filter((item => item.id !== id)) });
+    if(local) {this.socket.emit('removeTask', id)};
+  }
+
+  updateTasks = newTasks => {
+    this.setState({ tasks: newTasks });
+  }
 
   render() {
+    const { tasks, taskName } = this.state;
+
     return (
       <div className="App">
 
@@ -14,12 +53,15 @@ class App extends React.Component {
           <h2>Tasks</h2>
 
           <ul className="tasks-section__list" id="tasks-list">
-            <li class="task">Shopping <button class="btn btn--red">Remove</button></li>
-            <li class="task">Go out with a dog <button class="btn btn--red">Remove</button></li>
+            {tasks.map(item => (
+              <li key={item.id} className="task">{item.name}
+                <button onClick={() => this.removeTask(item.id, true)} className="btn btn--red">Remove</button>
+              </li>
+            ))}
           </ul>
 
-          <form id="add-task-form">
-            <input className="text-input" autocomplete="off" type="text" placeholder="Type your description" id="task-name" />
+          <form id="add-task-form" onSubmit={event => this.submitForm(event)}>
+            <input className="text-input" autocomplete="off" type="text" placeholder="Type your description" id="task-name" value={taskName} onChange={event => this.setState({taskName: event.target.value})}/>
             <button className="btn" type="submit">Add</button>
           </form>
 
@@ -28,7 +70,6 @@ class App extends React.Component {
     );
 
   };
-
 };
 
 export default App;
